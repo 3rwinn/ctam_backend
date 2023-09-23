@@ -66,7 +66,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'core.urls'
 
-CORS_ALLOWED_ORIGINS = os.getenv("DJANGO_ALLOWED_HOSTS", "http://127.0.0.1").split(",")
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_HOSTS", "http://127.0.0.1").split(",")
 
 
 TEMPLATES = [
