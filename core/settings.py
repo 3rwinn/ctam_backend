@@ -66,7 +66,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'core.urls'
 
-CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_HOSTS", "http://127.0.0.1").split(",")
+CORS_ALLOWED_ORIGINS = ['http://localhost:3001', 'http://127.0.0.1:3001', 'https://zingy-buttercream-6bc904.netlify.app']
 
 
 TEMPLATES = [
