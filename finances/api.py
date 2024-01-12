@@ -8,6 +8,7 @@ from .models import EntreeCaisse, SortieCaisse, SuiviBanque, FicheDimanche
 
 from .helpers import get_finances_stats
 from django.db.models import Sum
+from .models import Mission
 
 
 class EntreeCaisseList(generics.ListCreateAPIView):
@@ -118,14 +119,14 @@ def entree_caisse_by_date(request, start_date, end_date):
         all_entree_caisse = EntreeCaisse.objects.all()
         total_all_entree_caisse_query = all_entree_caisse.aggregate(Sum('montant'))[
             'montant__sum']
-        
+
         total_all_entree_caisse = total_all_entree_caisse_query if total_all_entree_caisse_query else 0
-        
+
         entree_caisse_by_date = EntreeCaisse.objects.filter(
             date__range=[start_date, end_date])
         total_entree_caisse_by_date_query = entree_caisse_by_date.aggregate(Sum('montant'))[
             'montant__sum']
-        
+
         total_entree_caisse_by_date = total_entree_caisse_by_date_query if total_entree_caisse_by_date_query else 0
 
         return Response(
@@ -135,7 +136,8 @@ def entree_caisse_by_date(request, start_date, end_date):
             status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 @api_view(['GET'])
 def sortie_caisse_by_date(request, start_date, end_date):
 
@@ -143,14 +145,14 @@ def sortie_caisse_by_date(request, start_date, end_date):
         all_sortie_caisse = SortieCaisse.objects.all()
         total_all_sortie_caisse_query = all_sortie_caisse.aggregate(Sum('montant'))[
             'montant__sum']
-        
+
         total_all_sortie_caisse = total_all_sortie_caisse_query if total_all_sortie_caisse_query else 0
-        
+
         sortie_caisse_by_date = SortieCaisse.objects.filter(
             date__range=[start_date, end_date])
         total_sortie_caisse_by_date_query = sortie_caisse_by_date.aggregate(Sum('montant'))[
             'montant__sum']
-        
+
         total_sortie_caisse_by_date = total_sortie_caisse_by_date_query if total_sortie_caisse_by_date_query else 0
 
         return Response(
@@ -159,32 +161,61 @@ def sortie_caisse_by_date(request, start_date, end_date):
              'sortie_caisse_by_date': SortieCaisseSerializer(sortie_caisse_by_date, many=True).data},
             status=status.HTTP_200_OK)
     else:
-        return Response(status=status.HTTP_400_BAD_REQUEST) 
-    
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 def suivi_banque_by_date(request, start_date, end_date):
-        if request.method == "GET":
-            all_suivi_banque = SuiviBanque.objects.all()
-            total_all_suivi_banque_query = all_suivi_banque.aggregate(Sum('montant'))[
+    if request.method == "GET":
+        all_suivi_banque = SuiviBanque.objects.all()
+        total_all_suivi_banque_query = all_suivi_banque.aggregate(Sum('montant'))[
+            'montant__sum']
+
+        total_all_suivi_banque = total_all_suivi_banque_query if total_all_suivi_banque_query else 0
+
+        suivi_banque_by_date = SuiviBanque.objects.filter(
+            date__range=[start_date, end_date])
+        total_suivi_banque_by_date_query = suivi_banque_by_date.aggregate(Sum('montant'))[
+            'montant__sum']
+        
+
+        total_suivi_banque_by_date = total_suivi_banque_by_date_query if total_suivi_banque_by_date_query else 0
+
+        missions_datas = []
+        missions = Mission.objects.all()
+        for mission in missions:
+            # get sum of suivi banque by mission where date between start_date and end_date and action is versement
+
+            suivi_banque_versement_by_mission_query = SuiviBanque.objects.filter(
+                mission__id=mission.id, date__range=[start_date, end_date], action='versement')
+            suivi_banque_versement_by_mission = suivi_banque_versement_by_mission_query.aggregate(Sum('montant'))[
                 'montant__sum']
             
-            total_all_suivi_banque = total_all_suivi_banque_query if total_all_suivi_banque_query else 0
-            
-            suivi_banque_by_date = SuiviBanque.objects.filter(
-                date__range=[start_date, end_date])
-            total_suivi_banque_by_date_query = suivi_banque_by_date.aggregate(Sum('montant'))[
+            print(f"suivi_banque_versement_by_mission: {suivi_banque_versement_by_mission}")
+
+            suivi_banque_retrait_by_mission_query = SuiviBanque.objects.filter(
+                mission__id=mission.id, date__range=[start_date, end_date], action='retrait')
+
+            suivi_banque_retrait_by_mission = suivi_banque_retrait_by_mission_query.aggregate(Sum('montant'))[
                 'montant__sum']
             
-            total_suivi_banque_by_date = total_suivi_banque_by_date_query if total_suivi_banque_by_date_query else 0
-    
-            return Response(
-                {'total_suivi_banque_by_date': total_suivi_banque_by_date,
-                'total_all_suivi_banque': total_all_suivi_banque,
-                'suivi_banque_by_date': SuiviBanqueSerializer(suivi_banque_by_date, many=True).data},
-                status=status.HTTP_200_OK)
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            print(f"suivi_banque_retrait_by_mission: {suivi_banque_retrait_by_mission}")
+
+            missions_datas.append({
+                'mission': mission.libelle,
+                'versement_total': suivi_banque_versement_by_mission if suivi_banque_versement_by_mission else 0,
+                'retrait_total': suivi_banque_retrait_by_mission if suivi_banque_retrait_by_mission else 0,
+            })
+
+        return Response(
+            {'total_suivi_banque_by_date': total_suivi_banque_by_date,
+             'total_all_suivi_banque': total_all_suivi_banque,
+             'missions_datas': missions_datas,
+             'suivi_banque_by_date': SuiviBanqueSerializer(suivi_banque_by_date, many=True).data},
+
+            status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 # django generic api view to get SortieCaisse based on start_date and end_date
 # class SortieCaisseByDateList(generics.ListAPIView):

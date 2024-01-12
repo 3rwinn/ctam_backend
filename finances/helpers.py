@@ -24,6 +24,10 @@ def get_finances_stats(mission, date_debut, date_fin):
 
     total_entree = total_entree_offrande + total_entree_dime
 
+    real_total_entree_query = EntreeCaisse.objects.filter(date__range=[date_debut, date_fin], mission__id=mission).aggregate(Sum('montant'))['montant__sum']
+
+    real_total_entree = real_total_entree_query if real_total_entree_query is not None else 0
+    
     suivi_banque_versement = SuiviBanque.objects.filter(action="versement",
                                                         date__range=[date_debut, date_fin]).aggregate(Sum('montant'))['montant__sum']
 
@@ -34,12 +38,18 @@ def get_finances_stats(mission, date_debut, date_fin):
 
     total_suivi_banque_retrait = suivi_banque_retrait if suivi_banque_retrait is not None else 0
 
-    calcul_solde_caisse = (total_entree - total_sortie) - \
-        total_suivi_banque_versement
+    # calcul_solde_caisse = (real_total_entree - total_sortie) - \
+    #     total_suivi_banque_versement
 
-    solde_caisse = calcul_solde_caisse if calcul_solde_caisse > 0 else 0
+    calcul_solde_caisse = real_total_entree - (total_sortie + total_suivi_banque_versement)
+    print(f"total_entree: {total_entree}")
+    print(f"total_sortie: {total_sortie}")
+    print(f"total_suivi_banque_versement: {total_suivi_banque_versement}")
 
-    solde_banque = total_suivi_banque_versement - total_suivi_banque_retrait
+
+    solde_caisse = int(calcul_solde_caisse) if calcul_solde_caisse > 0 else 0
+
+    solde_banque = int(total_suivi_banque_versement - total_suivi_banque_retrait)
 
     # Entree & Depense by month based on the date range
     entree_by_month = EntreeCaisse.objects.filter(date__range=[date_debut, date_fin], mission__id=mission).values('date__month').annotate(
