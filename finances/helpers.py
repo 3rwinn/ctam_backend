@@ -34,8 +34,10 @@ def get_finances_stats(mission, date_debut, date_fin):
 
     total_suivi_banque_retrait = suivi_banque_retrait if suivi_banque_retrait is not None else 0
 
-    calcul_solde_caisse = (total_entree - total_sortie) - \
-        total_suivi_banque_versement
+    # calcul_solde_caisse = (total_entree - total_sortie) - \
+    #     total_suivi_banque_versement
+
+    calcul_solde_caisse = total_entree - (total_sortie + total_suivi_banque_versement)
 
     solde_caisse = calcul_solde_caisse if calcul_solde_caisse > 0 else 0
 
