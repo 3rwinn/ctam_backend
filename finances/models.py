@@ -32,6 +32,7 @@ class SuiviBanque(models.Model):
     date = models.DateField()
     montant = models.IntegerField()
     commentaire = models.TextField(blank=True)
+    mission = models.ForeignKey(Mission, on_delete=models.CASCADE, null=True)
     created_at = models.DateField(auto_now_add=True)
     action = models.CharField(max_length=30)
 
