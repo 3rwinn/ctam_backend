@@ -28,10 +28,10 @@ def get_finances_stats(mission, date_debut, date_fin):
 
     real_total_entree = real_total_entree_query if real_total_entree_query is not None else 0
     
-    suivi_banque_versement = SuiviBanque.objects.filter(action="versement",
+    suivi_banque_versement = SuiviBanque.objects.filter(mission__id=mission, action="versement",
                                                         date__range=[date_debut, date_fin]).aggregate(Sum('montant'))['montant__sum']
 
-    suivi_banque_retrait = SuiviBanque.objects.filter(
+    suivi_banque_retrait = SuiviBanque.objects.filter(mission__id=mission,
         action='retrait', date__range=[date_debut, date_fin]).aggregate(Sum('montant'))['montant__sum']
 
     total_suivi_banque_versement = suivi_banque_versement if suivi_banque_versement is not None else 0
